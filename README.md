@@ -70,6 +70,10 @@ The app supports both English and Japanese languages. However, for the purpose o
 
 Contributions to this project are welcome! Feel free to create pull requests or open issues for bug fixes, feature requests, or any other improvements.
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=devsteppe9/interacting_bear&type=Date)](https://www.star-history.com/#devsteppe9/interacting_bear&Date)
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
