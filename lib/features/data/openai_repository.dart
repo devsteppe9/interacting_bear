@@ -30,7 +30,7 @@ class OpenAIRepository {
 
   Future<OpenAIChatCompletionModel> fetchChatCompletion(
       List<OpenAIChatCompletionChoiceMessageModel> messages,
-      {String model = 'gpt-3.5-turbo',
+      {String model = 'gpt-4.1-nano',
       double temperature = 1}) {
     return _openAI.chat.create(
       model: model,
