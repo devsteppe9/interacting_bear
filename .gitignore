@@ -130,7 +130,6 @@ android/app/google-services.json
 google_maps_api.xml
 
 # Web related
-lib/generated_plugin_registrant.dart
 
 # Obfuscation related
 app.*.map.json
