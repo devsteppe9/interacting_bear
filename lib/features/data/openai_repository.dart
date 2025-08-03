@@ -8,8 +8,9 @@ class OpenAIRepository {
   final OpenAI _openAI;
 
   List<OpenAIChatCompletionChoiceMessageModel> context = [
-    const OpenAIChatCompletionChoiceMessageModel(
-      content:
+    OpenAIChatCompletionChoiceMessageModel(
+      content: [
+        OpenAIChatCompletionChoiceMessageContentItemModel.text(
           """
             You're a friendly polar bear who loves to chat with kids aged 3-5, 
             just like the Talking Tom app. They'll ask you questions and you'll have a 
@@ -21,6 +22,8 @@ class OpenAIRepository {
             English if they speak to you in English. The language can change in each chat.
             - Your response must be two or three sentences only.
           """,
+        ),
+      ],
       role: OpenAIChatMessageRole.system,
     )
   ];
@@ -38,11 +41,19 @@ class OpenAIRepository {
 
   Future<String> fetchAnswer(String prompt) {
     context.add(OpenAIChatCompletionChoiceMessageModel(
-        role: OpenAIChatMessageRole.user, content: prompt));
+        role: OpenAIChatMessageRole.user, 
+        content: [
+          OpenAIChatCompletionChoiceMessageContentItemModel.text(prompt),
+        ]));
 
     final response = fetchChatCompletion(context).then((value) {
       context.add(value.choices.first.message);
-      return value.choices.first.message.content;
+      // Extract text content from the response
+      final messageContent = value.choices.first.message.content;
+      if (messageContent != null && messageContent.isNotEmpty) {
+        return messageContent.first.text ?? '';
+      }
+      return '';
     });
 
     return response;

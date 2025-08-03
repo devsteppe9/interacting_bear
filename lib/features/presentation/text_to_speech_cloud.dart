@@ -42,7 +42,7 @@ class _TextToSpeechState extends ConsumerState<TextToSpeechCloud> {
     print('Built text to speech');
     ref.listen(openAIResponseControllerProvider, (previous, next) {
       if (previous != next) {
-        _speakCloudTTS(next ?? '');
+        _speakCloudTTS((next as String?) ?? '');
         print('STATE: $next');
       }
     });
