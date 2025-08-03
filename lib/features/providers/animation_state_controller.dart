@@ -5,10 +5,10 @@ part 'animation_state_controller.g.dart';
 class AnimationState {
   bool isHearing = false;
   bool isTalking = false;
-  String language = 'jp';
+  String language = 'en';
 
   AnimationState(
-      {this.isHearing = false, this.isTalking = false, this.language = 'jp'});
+      {this.isHearing = false, this.isTalking = false, this.language = 'en'});
 }
 
 @riverpod
