@@ -1,7 +1,6 @@
 name: Promote Release to AWS S3 and CloudFront
 on:
   release:
-
 jobs:
   promote:
     runs-on: ubuntu-latest
