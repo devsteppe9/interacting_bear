@@ -1,0 +1,79 @@
+name: Promote Release to AWS S3 and CloudFront
+on:
+  release:
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    if: github.event.release.prerelease == false
+    permissions:
+      contents: read
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      S3_BUCKET: 'interacting-bear-static-website'
+      S3_BUCKET_REGION: 'us-east-1'
+      CLOUDFRONT_DISTRIBUTION_ID: 'E2LAO4ZFF55RTR'
+    steps:
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Download build artifact from release
+        run: |
+          # Get the download URL for the build artifact
+          echo "Fetching release info for tag: v${{ steps.version.outputs.version }}"
+          
+          RELEASE_INFO=$(curl -s \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/v${{ steps.version.outputs.version }}")
+          
+          echo "Release API response:"
+          echo "$RELEASE_INFO" | jq '.'
+          
+          ASSET_ID=$(echo "$RELEASE_INFO" | jq -r '.assets[] | select(.name=="build-artifacts-${{ steps.version.outputs.version }}.zip") | .id')
+
+          if [ "$ASSET_ID" = "null" ] || [ -z "$ASSET_ID" ]; then
+            echo "Error: Could not find build artifact in release assets"
+            echo "Available assets:"
+            echo "$RELEASE_INFO" | jq -r '.assets[].name'
+            exit 1
+          fi
+
+          echo "Asset ID: $ASSET_ID"
+          
+          # Download the zip file using GitHub API asset endpoint
+          curl -L \
+            -H "Accept: application/octet-stream" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -o build-artifacts-${{ steps.version.outputs.version }}.zip \
+            "https://api.github.com/repos/${{ github.repository }}/releases/assets/$ASSET_ID"
+          
+          # Verify the download
+          if [ ! -f "build-artifacts-${{ steps.version.outputs.version }}.zip" ]; then
+            echo "Error: Downloaded file not found"
+            exit 1
+          fi
+          
+          echo "Downloaded file size:"
+          ls -la build-artifacts-${{ steps.version.outputs.version }}.zip
+          
+          # Extract the zip file
+          mkdir -p build
+          unzip build-artifacts-${{ steps.version.outputs.version }}.zip -d build
+
+      - name: Deploy to S3 and CloudFront
+        uses: reggionick/s3-deploy@v4
+        with:
+          folder: build
+          bucket: ${{ env.S3_BUCKET }}
+          bucket-region: ${{ env.S3_BUCKET_REGION }}
+          dist-id: ${{ env.CLOUDFRONT_DISTRIBUTION_ID }}
+          invalidation: /
+          delete-removed: true
+          private: true
+          files-to-include: '{.*/**,**}'
+
+      
