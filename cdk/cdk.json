@@ -1,0 +1,38 @@
+{
+    "app": "python3 app.py",
+    "watch": {
+        "include": [
+            "**"
+        ],
+        "exclude": [
+            "README.md",
+            "cdk*.json",
+            "requirements*.txt",
+            "source.bat",
+            "**/__pycache__",
+            "**/*.pyc"
+        ]
+    },
+    "context": {
+        "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
+        "@aws-cdk/core:checkSecretUsage": true,
+        "@aws-cdk/core:target": "aws-cdk-lib.assertions",
+        "@aws-cdk/aws-apigateway:usagePlanKeyOrderInsensitiveId": true,
+        "aws-cdk:enableDiffNoFail": true,
+        "@aws-cdk/core:stackRelativeExports": true,
+        "@aws-cdk/aws-rds:lowercaseDbIdentifier": true,
+        "@aws-cdk/aws-lambda:recognizeVersionProps": true,
+        "@aws-cdk/aws-cloudfront:defaultSecurityPolicyTLSv1.2_2021": true,
+        "@aws-cdk/aws-secretsmanager:useAttachedSecretResourcePolicyForSecretTargetAttachments": true,
+        "@aws-cdk/aws-redshift:columnId": true,
+        "@aws-cdk/core:validateSnapshotRemovalPolicy": true,
+        "@aws-cdk/aws-codepipeline:crossAccountKeyAliasStackSafeResourceName": true,
+        "@aws-cdk/aws-s3:createDefaultLoggingPolicy": true,
+        "@aws-cdk/aws-sns-subscriptions:restrictSqsDescryption": true,
+        "@aws-cdk/aws-apigateway:disableCloudWatchRole": true,
+        "@aws-cdk/core:enablePartitionLiterals": true,
+        "@aws-cdk/core:disableDeprecatedFlagProcessing": true,
+        "@aws-cdk/aws-s3-deployment:createDefaultLoggingPolicy": true,
+        "@aws-cdk/aws-sns:restrictSqsDescryption": true
+    }
+}

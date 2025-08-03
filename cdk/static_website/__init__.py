@@ -1,0 +1,1 @@
+# Static Website CDK Stack
