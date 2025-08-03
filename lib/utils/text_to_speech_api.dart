@@ -1,13 +1,12 @@
-import 'dart:io';
 import 'dart:async';
 import 'dart:convert' show base64, json, utf8;
 import 'dart:typed_data';
+import 'package:http/http.dart' as http;
 
 import 'package:interacting_tom/env/env.dart';
 
 class TextToSpeechAPI {
   static final TextToSpeechAPI _singleton = TextToSpeechAPI._internal();
-  final _httpClient = HttpClient();
   static final _apiKey = Env.googleCloudKey;
   static const _apiURL = "texttospeech.googleapis.com";
 
@@ -59,11 +58,20 @@ class TextToSpeechAPI {
 
   Future<Map<String, dynamic>> _postJson(Uri uri, Map jsonMap) async {
     try {
-      final httpRequest = await _httpClient.postUrl(uri);
-      final jsonData = utf8.encode(json.encode(jsonMap));
-      final jsonResponse =
-          await _processRequestIntoJsonResponse(httpRequest, jsonData);
-      return jsonResponse;
+      final response = await http.post(
+        uri,
+        headers: {
+          'X-Goog-Api-Key': _apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(jsonMap),
+      );
+      
+      if (response.statusCode != 200) {
+        throw Exception('Bad Response: ${response.statusCode}');
+      }
+      
+      return json.decode(response.body);
     } on Exception catch (e) {
       print("$e");
       return {};
@@ -72,31 +80,19 @@ class TextToSpeechAPI {
 
   Future<Map<String, dynamic>> _getJson(Uri uri) async {
     try {
-      final httpRequest = await _httpClient.getUrl(uri);
-      final jsonResponse =
-          await _processRequestIntoJsonResponse(httpRequest, null);
-      return jsonResponse;
-    } on Exception catch (e) {
-      print("$e");
-      return {};
-    }
-  }
-
-  Future<Map<String, dynamic>> _processRequestIntoJsonResponse(
-      HttpClientRequest httpRequest, List<int>? data) async {
-    try {
-      httpRequest.headers.add('X-Goog-Api-Key', _apiKey);
-      httpRequest.headers
-          .add(HttpHeaders.contentTypeHeader, 'application/json');
-      if (data != null) {
-        httpRequest.add(data);
+      final response = await http.get(
+        uri,
+        headers: {
+          'X-Goog-Api-Key': _apiKey,
+          'Content-Type': 'application/json',
+        },
+      );
+      
+      if (response.statusCode != 200) {
+        throw Exception('Bad Response: ${response.statusCode}');
       }
-      final httpResponse = await httpRequest.close();
-      if (httpResponse.statusCode != HttpStatus.ok) {
-        throw Exception('Bad Response');
-      }
-      final responseBody = await httpResponse.transform(utf8.decoder).join();
-      return json.decode(responseBody);
+      
+      return json.decode(response.body);
     } on Exception catch (e) {
       print("$e");
       return {};

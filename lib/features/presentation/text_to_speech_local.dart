@@ -173,7 +173,7 @@ class _TextToSpeechState extends ConsumerState<TextToSpeechLocal> {
     print('Built text to speech');
     ref.listen(openAIResponseControllerProvider, (previous, next) {
       if (previous != next) {
-        _speak(next ?? '');
+        _speak((next as String?) ?? '');
         print('STATE: $next');
       }
     });
