@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:interacting_tom/features/presentation/text_to_speech_cloud.dart';
-import 'package:interacting_tom/features/presentation/text_to_speech_local.dart';
 import 'package:interacting_tom/features/providers/openai_response_controller.dart';
 import 'package:interacting_tom/features/providers/animation_state_controller.dart';
 import 'package:speech_to_text/speech_recognition_error.dart';
@@ -16,15 +14,36 @@ class STTWidget extends ConsumerStatefulWidget {
   ConsumerState<STTWidget> createState() => _STTWidgetState();
 }
 
-class _STTWidgetState extends ConsumerState<STTWidget> {
+class _STTWidgetState extends ConsumerState<STTWidget>
+    with TickerProviderStateMixin {
   final SpeechToText _speechToText = SpeechToText();
   String _lastWords = '';
   List<LocaleName> _localeNames = [];
+  late AnimationController _idleAnimationController;
+  late Animation<double> _idleAnimation;
 
   @override
   void initState() {
     super.initState();
     _initSpeech();
+    _idleAnimationController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+    _idleAnimation = Tween<double>(
+      begin: 0.0,
+      end: 10.0,
+    ).animate(CurvedAnimation(
+      parent: _idleAnimationController,
+      curve: Curves.easeInOut,
+    ));
+    _idleAnimationController.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _idleAnimationController.dispose();
+    super.dispose();
   }
 
   void errorListener(SpeechRecognitionError error) {
@@ -109,16 +128,53 @@ class _STTWidgetState extends ConsumerState<STTWidget> {
     print('Built STT widget');
     print("IS LISTENING: $_isListening");
 
-    final micIcon =
-        _isListening ? const Icon(Icons.mic) : const Icon(Icons.mic_off);
-    final child = TextToSpeechCloud(child: micIcon);
-    // final child = TextToSpeechLocal(child: micIcon);
-    return FloatingActionButton(
-        onPressed: () {
-          print("IS LISTENING: $_isListening");
-          _isListening ? _stopListening() : _startListening();
-        },
-        tooltip: _isListening ? 'Pause' : 'Play',
-        child: child);
+    return AnimatedBuilder(
+      animation: _idleAnimation,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(0, _isListening ? 0 : _idleAnimation.value),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: InkWell(
+              onTap: () {
+                print("IS LISTENING: $_isListening");
+                _isListening ? _stopListening() : _startListening();
+              },
+              borderRadius: BorderRadius.circular(30),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _isListening ? Icons.mic : Icons.mic_off,
+                    color: _isListening ? Colors.red : Colors.grey[600],
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    _isListening ? 'LISTENING...' : 'TAP TO SPEAK',
+                    style: TextStyle(
+                      color: _isListening ? Colors.red : Colors.grey[600],
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }
