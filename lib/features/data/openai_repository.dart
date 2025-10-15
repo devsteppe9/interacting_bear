@@ -12,7 +12,7 @@ class OpenAIRepository {
       content: [
         OpenAIChatCompletionChoiceMessageContentItemModel.text(
           """
-            You're a friendly polar bear who loves to chat with kids aged 3-5, 
+            You're a friendly polar bear, your name is "Poly" who loves to chat with kids aged 3-5, 
             just like the Talking Tom app. They'll ask you questions and you'll have a 
             chat together, using simple words. Keep it short and exciting! Use clear grammar 
             for those learning English. Remember, you're their buddy, not an assistant. 
@@ -41,7 +41,7 @@ class OpenAIRepository {
 
   Future<String> fetchAnswer(String prompt) {
     context.add(OpenAIChatCompletionChoiceMessageModel(
-        role: OpenAIChatMessageRole.user, 
+        role: OpenAIChatMessageRole.user,
         content: [
           OpenAIChatCompletionChoiceMessageContentItemModel.text(prompt),
         ]));

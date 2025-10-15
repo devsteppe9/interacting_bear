@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interacting_tom/features/providers/openai_response_controller.dart';
@@ -22,6 +23,7 @@ class _STTWidgetState extends ConsumerState<STTWidget>
   late AnimationController _idleAnimationController;
   late Animation<double> _idleAnimation;
   bool _isWaitingForResponse = false;
+  Timer? _responseTimeout;
   @override
   void initState() {
     super.initState();
@@ -45,6 +47,7 @@ class _STTWidgetState extends ConsumerState<STTWidget>
   @override
   void dispose() {
     _idleAnimationController.dispose();
+    _responseTimeout?.cancel();
     super.dispose();
   }
 
@@ -100,10 +103,32 @@ class _STTWidgetState extends ConsumerState<STTWidget>
   /// and the SpeechToText plugin supports setting timeouts on the
   /// listen method.
   void _stopListening() async {
+    // Start waiting for response with timeout
+    _startWaitingForResponse();
     await _speechToText.stop();
     ref.read(animationStateControllerProvider.notifier).updateHearing(false);
+  }
 
-    setState(() {});
+  void _startWaitingForResponse() {
+    setState(() {
+      _isWaitingForResponse = true;
+    });
+
+    // Start timeout timer (10 seconds)
+    _responseTimeout?.cancel();
+    _responseTimeout = Timer(const Duration(seconds: 10), () {
+      print('OpenAI response timeout - stopping wait');
+      _stopWaitingForResponse();
+    });
+  }
+
+  void _stopWaitingForResponse() {
+    _responseTimeout?.cancel();
+    if (_isWaitingForResponse) {
+      setState(() {
+        _isWaitingForResponse = false;
+      });
+    }
   }
 
   /// This is the callback that the SpeechToText plugin calls when
@@ -111,16 +136,11 @@ class _STTWidgetState extends ConsumerState<STTWidget>
   void _onSpeechResult(SpeechRecognitionResult result) async {
     if (result.finalResult) {
       _lastWords = result.recognizedWords;
-
-      // Set waiting state
-      setState(() {
-        _isWaitingForResponse = true;
-      });
+      _stopListening();
 
       ref
           .read(openAIResponseControllerProvider.notifier)
           .getResponse(_lastWords);
-      _stopListening();
     }
   }
 
@@ -131,27 +151,22 @@ class _STTWidgetState extends ConsumerState<STTWidget>
     print('Built STT widget');
     print("IS LISTENING: $_isListening");
 
-    // Listen to OpenAI response to reset waiting state
-    final asyncValue = ref.watch(openAIResponseControllerProvider);
-    asyncValue.when(
-      data: (data) {
-        if (_isWaitingForResponse && data != null) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            setState(() => _isWaitingForResponse = false);
-          });
-        }
-      },
-      error: (error, stackTrace) {
-        if (_isWaitingForResponse) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            setState(() => _isWaitingForResponse = false);
-          });
-        }
-      },
-      loading: () {
-        // Loading state is handled when we start the request
-      },
-    );
+    // Listen to OpenAI response to stop waiting when response received
+    ref.listen(openAIResponseControllerProvider, (previous, next) {
+      if (_isWaitingForResponse) {
+        next.when(
+          data: (data) {
+            if (data != null) {
+              _stopWaitingForResponse();
+            }
+          },
+          error: (error, stackTrace) {
+            _stopWaitingForResponse();
+          },
+          loading: () {}, // Keep waiting during loading
+        );
+      }
+    });
 
     final bool isIdle = !_isListening && !_isWaitingForResponse;
     final bool isDisabled = _isWaitingForResponse;
