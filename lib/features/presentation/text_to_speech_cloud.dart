@@ -65,10 +65,12 @@ class _TextToSpeechState extends ConsumerState<TextToSpeechCloud> {
   Widget build(BuildContext context) {
     print('Built text to speech');
     ref.listen(openAIResponseControllerProvider, (previous, next) {
-      if (previous != next && next != null && next.toString().isNotEmpty) {
-        _speakCloudTTS(next.toString());
-        print('TTS STATE: $next');
-      }
+      next.whenData((data) {
+        if (data != null && data.isNotEmpty) {
+          _speakCloudTTS(data);
+          print('TTS STATE: $data');
+        }
+      });
     });
 
     return widget.child ?? const SizedBox();

@@ -6,22 +6,20 @@ part 'openai_response_controller.g.dart';
 @riverpod
 class OpenAIResponseController extends _$OpenAIResponseController {
   @override
-  build() {
-    // no-op
-    return null;
+  AsyncValue<String?> build() {
+    return const AsyncValue.data(null);
   }
 
   void getResponse(String prompt) async {
     final openAIRepository = ref.read(openAIRepostitoryProvider);
 
-    // state = const AsyncLoading();
+    // Set loading state
+    state = const AsyncValue.loading();
+
     final responseValue = await AsyncValue.guard(() async {
       return openAIRepository.fetchAnswer(prompt);
     });
 
-    responseValue.when(
-        data: (data) => state = data,
-        error: (error, stackTrace) => print(error),
-        loading: () => null);
+    state = responseValue;
   }
 }

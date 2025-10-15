@@ -21,11 +21,15 @@ class _STTWidgetState extends ConsumerState<STTWidget>
   List<LocaleName> _localeNames = [];
   late AnimationController _idleAnimationController;
   late Animation<double> _idleAnimation;
-
+  late AnimationController _listeningAnimationController;
+  late Animation<double> _listeningAnimation;
+  bool _isWaitingForResponse = false;
   @override
   void initState() {
     super.initState();
     _initSpeech();
+
+    // Idle animation (gentle movement when not active)
     _idleAnimationController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
@@ -38,11 +42,25 @@ class _STTWidgetState extends ConsumerState<STTWidget>
       curve: Curves.easeInOut,
     ));
     _idleAnimationController.repeat(reverse: true);
+
+    // Listening animation (pulsing when actively listening)
+    _listeningAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+    _listeningAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.2,
+    ).animate(CurvedAnimation(
+      parent: _listeningAnimationController,
+      curve: Curves.easeInOut,
+    ));
   }
 
   @override
   void dispose() {
     _idleAnimationController.dispose();
+    _listeningAnimationController.dispose();
     super.dispose();
   }
 
@@ -77,6 +95,9 @@ class _STTWidgetState extends ConsumerState<STTWidget>
     final localeId = _getCurrentLocale();
     await _speechToText.listen(onResult: _onSpeechResult, localeId: localeId);
 
+    // Start listening animation
+    _listeningAnimationController.repeat(reverse: true);
+
     setState(() {});
   }
 
@@ -100,6 +121,11 @@ class _STTWidgetState extends ConsumerState<STTWidget>
   void _stopListening() async {
     await _speechToText.stop();
     ref.read(animationStateControllerProvider.notifier).updateHearing(false);
+
+    // Stop listening animation
+    _listeningAnimationController.stop();
+    _listeningAnimationController.reset();
+
     setState(() {});
   }
 
@@ -108,6 +134,13 @@ class _STTWidgetState extends ConsumerState<STTWidget>
   void _onSpeechResult(SpeechRecognitionResult result) async {
     if (result.finalResult) {
       _lastWords = result.recognizedWords;
+
+      // Set waiting state and stop listening animation
+      setState(() {
+        _isWaitingForResponse = true;
+      });
+      _listeningAnimationController.stop();
+
       ref
           .read(openAIResponseControllerProvider.notifier)
           .getResponse(_lastWords);
@@ -128,53 +161,111 @@ class _STTWidgetState extends ConsumerState<STTWidget>
     print('Built STT widget');
     print("IS LISTENING: $_isListening");
 
+    // Listen to OpenAI response to reset waiting state
+    final asyncValue = ref.watch(openAIResponseControllerProvider);
+    asyncValue.when(
+      data: (data) {
+        if (_isWaitingForResponse && data != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            setState(() => _isWaitingForResponse = false);
+          });
+        }
+      },
+      error: (error, stackTrace) {
+        if (_isWaitingForResponse) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            setState(() => _isWaitingForResponse = false);
+          });
+        }
+      },
+      loading: () {
+        // Loading state is handled when we start the request
+      },
+    );
+
+    final bool isIdle = !_isListening && !_isWaitingForResponse;
+    final bool isDisabled = _isWaitingForResponse;
+
     return AnimatedBuilder(
-      animation: _idleAnimation,
+      animation: Listenable.merge([_idleAnimation, _listeningAnimation]),
       builder: (context, child) {
         return Transform.translate(
-          offset: Offset(0, _isListening ? 0 : _idleAnimation.value),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: InkWell(
-              onTap: () {
-                print("IS LISTENING: $_isListening");
-                _isListening ? _stopListening() : _startListening();
-              },
-              borderRadius: BorderRadius.circular(30),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    _isListening ? Icons.mic : Icons.mic_off,
-                    color: _isListening ? Colors.red : Colors.grey[600],
-                    size: 24,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    _isListening ? 'LISTENING...' : 'TAP TO SPEAK',
-                    style: TextStyle(
-                      color: _isListening ? Colors.red : Colors.grey[600],
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
+          offset: Offset(0, isIdle ? _idleAnimation.value : 0),
+          child: Transform.scale(
+            scale: _isListening ? _listeningAnimation.value : 1.0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
                 ],
+              ),
+              child: InkWell(
+                onTap: isDisabled
+                    ? null
+                    : () {
+                        print("IS LISTENING: $_isListening");
+                        _isListening ? _stopListening() : _startListening();
+                      },
+                borderRadius: BorderRadius.circular(30),
+                child: Semantics(
+                  label: _getSemanticLabel(),
+                  button: true,
+                  enabled: !isDisabled,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _getIconData(),
+                        color: _getIconColor(),
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        _getDisplayText(),
+                        style: TextStyle(
+                          color: _getIconColor(),
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
         );
       },
     );
+  }
+
+  IconData _getIconData() {
+    if (_isWaitingForResponse) return Icons.hourglass_empty;
+    return _isListening ? Icons.mic : Icons.mic_off;
+  }
+
+  Color _getIconColor() {
+    if (_isWaitingForResponse) return Colors.orange;
+    if (_isListening) return Colors.red;
+    return Colors.grey[600]!;
+  }
+
+  String _getDisplayText() {
+    if (_isWaitingForResponse) return 'THINKING...';
+    if (_isListening) return 'LISTENING...';
+    return 'TAP TO SPEAK';
+  }
+
+  String _getSemanticLabel() {
+    if (_isWaitingForResponse) return 'Waiting for response, please wait';
+    if (_isListening) return 'Currently listening, tap to stop';
+    return 'Tap to start speaking';
   }
 }
