@@ -11,10 +11,15 @@ class HomeScreen extends StatelessWidget {
     print('home screen built');
     return const Scaffold(
       body: AnimationScreen(),
-      floatingActionButton: Wrap(
-        direction: Axis.vertical,
-        spacing: 30,
-        children: [FlagSwitch(), STTWidget()],
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // FlagSwitch(),
+          // SizedBox(height: 30),
+          Center(child: STTWidget()),
+        ],
       ),
     );
   }
