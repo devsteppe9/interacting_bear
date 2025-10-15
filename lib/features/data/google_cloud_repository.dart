@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interacting_tom/utils/text_to_speech_api.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -13,8 +14,7 @@ class GoogleCloudRepository {
     return ttsAPI.getVoices();
   }
 
-  Future<ByteAudioSource> synthesizeText(
-      String text, String lang) async {
+  Future<ByteAudioSource> synthesizeText(String text, String lang) async {
     final audioBytes = await ttsAPI.synthesizeText(text, lang);
     return ByteAudioSource(audioBytes);
   }
@@ -39,20 +39,19 @@ class ByteAudioSource extends StreamAudioSource {
 }
 
 @Riverpod(keepAlive: true)
-GoogleCloudRepository googleCloudRepository(GoogleCloudRepositoryRef ref) {
-  
+GoogleCloudRepository googleCloudRepository(Ref ref) {
   return GoogleCloudRepository(TextToSpeechAPI());
 }
 
 @riverpod
-Future<List<Voice>> voicesFuture(VoicesFutureRef ref) {
+Future<List<Voice>> voicesFuture(Ref ref) {
   final googleCloudRepository = ref.read(googleCloudRepositoryProvider);
   return googleCloudRepository.getVoices();
 }
 
 @riverpod
 Future<ByteAudioSource> synthesizeTextFuture(
-    SynthesizeTextFutureRef ref, String text, String lang) {
+    Ref ref, String text, String lang) {
   final googleCloudRepository = ref.read(googleCloudRepositoryProvider);
   return googleCloudRepository.synthesizeText(text, lang);
 }
