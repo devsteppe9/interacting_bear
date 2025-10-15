@@ -7,6 +7,7 @@ import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:collection/collection.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class STTWidget extends ConsumerStatefulWidget {
   const STTWidget({super.key});
@@ -23,11 +24,13 @@ class _STTWidgetState extends ConsumerState<STTWidget>
   late AnimationController _idleAnimationController;
   late Animation<double> _idleAnimation;
   bool _isWaitingForResponse = false;
+  bool _hasPermission = true; // Track permission status
   Timer? _responseTimeout;
   @override
   void initState() {
     super.initState();
     _initSpeech();
+    _checkInitialPermissionStatus();
 
     // Idle animation (gentle movement when not active)
     _idleAnimationController = AnimationController(
@@ -42,6 +45,14 @@ class _STTWidgetState extends ConsumerState<STTWidget>
       curve: Curves.easeInOut,
     ));
     _idleAnimationController.repeat(reverse: true);
+  }
+
+  /// Check initial permission status without requesting
+  void _checkInitialPermissionStatus() async {
+    var status = await Permission.microphone.status;
+    setState(() {
+      _hasPermission = status.isGranted;
+    });
   }
 
   @override
@@ -72,12 +83,79 @@ class _STTWidgetState extends ConsumerState<STTWidget>
     _localeNames = await _speechToText.locales();
   }
 
+  /// Check and request microphone permission
+  Future<bool> _checkMicrophonePermission() async {
+    var status = await Permission.microphone.status;
+
+    if (status.isDenied) {
+      // Request permission
+      status = await Permission.microphone.request();
+    }
+
+    if (status.isPermanentlyDenied) {
+      // Show dialog to open app settings
+      setState(() {
+        _hasPermission = false;
+      });
+      await _showPermissionDialog();
+      return false;
+    }
+
+    bool granted = status.isGranted;
+    setState(() {
+      _hasPermission = granted;
+    });
+
+    return granted;
+  }
+
+  Future<void> _showPermissionDialog() async {
+    if (!mounted) return;
+
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Microphone Permission Required'),
+          content: const Text(
+            'This app needs microphone access to listen to your voice. '
+            'Please enable microphone permission in your device settings.',
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Open Settings'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                openAppSettings();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   /// Each time to start a speech recognition session
   void _startListening() async {
     if (_speechToText.isListening) {
       print('Already listening');
       return;
     }
+
+    // Check microphone permission before starting
+    bool hasPermission = await _checkMicrophonePermission();
+    if (!hasPermission) {
+      print('Microphone permission denied');
+      return;
+    }
+
     ref.read(animationStateControllerProvider.notifier).updateHearing(true);
     final localeId = _getCurrentLocale();
     await _speechToText.listen(onResult: _onSpeechResult, localeId: localeId);
@@ -230,11 +308,13 @@ class _STTWidgetState extends ConsumerState<STTWidget>
 
   IconData _getIconData() {
     if (_isWaitingForResponse) return Icons.hourglass_empty;
+    if (!_hasPermission) return Icons.warning;
     return _isListening ? Icons.mic : Icons.mic_off;
   }
 
   Color _getIconColor() {
     if (_isWaitingForResponse) return Colors.orange;
+    if (!_hasPermission) return Colors.red;
     if (_isListening) return Colors.red;
     return Colors.grey[600]!;
   }
@@ -242,12 +322,15 @@ class _STTWidgetState extends ConsumerState<STTWidget>
   String _getDisplayText() {
     if (_isWaitingForResponse) return 'THINKING...';
     if (_isListening) return 'LISTENING...';
+    if (!_hasPermission) return 'NEED MIC PERMISSION';
     return 'TAP TO SPEAK';
   }
 
   String _getSemanticLabel() {
     if (_isWaitingForResponse) return 'Waiting for response, please wait';
     if (_isListening) return 'Currently listening, tap to stop';
+    if (!_hasPermission)
+      return 'Microphone permission required, tap to grant permission';
     return 'Tap to start speaking';
   }
 }
