@@ -47,6 +47,7 @@ dependencies:
   collection: ^1.17.1
   just_audio: ^0.9.34
   http: ^1.1.0
+  package_info_plus: ^9.0.0
 
 dev_dependencies:
   build_runner: ^2.4.8

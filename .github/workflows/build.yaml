@@ -59,6 +59,15 @@ jobs:
           cache: true
       - run: flutter --version
 
+      - name: Update pubspec.yaml version
+        run: |
+          # Update the version in pubspec.yaml with the semantic version
+          sed -i "s/^version: .*/version: ${{ needs.version.outputs.version }}+${{ github.run_number }}/g" pubspec.yaml
+          echo "Updated pubspec.yaml version to: ${{ needs.version.outputs.version }}+${{ github.run_number }}"
+          
+          # Verify the change
+          grep "^version:" pubspec.yaml
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -81,7 +90,13 @@ jobs:
         with:
           tag_name: v${{ needs.version.outputs.version }}
           name: Release v${{ needs.version.outputs.version }}
-          body: ${{ steps.release-notes.outputs.body }}
+          body: |
+            ## What's Changed
+            
+            Build artifacts for version ${{ needs.version.outputs.version }}
+            
+            - App version updated to: ${{ needs.version.outputs.version }}+${{ github.run_number }}
+            - Built from commit: ${{ github.sha }}
           draft: false
           prerelease: true
           generate_release_notes: true
