@@ -20,6 +20,23 @@ class _TextToSpeechState extends ConsumerState<TextToSpeechCloud> {
   double rate = 0.5;
   final player = AudioPlayer();
 
+  @override
+  void initState() {
+    super.initState();
+    // Set up the player state listener
+    player.playerStateStream.listen((event) {
+      if (event.processingState == ProcessingState.completed) {
+        updateTalkingAnimation(false);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    player.dispose();
+    super.dispose();
+  }
+
   void updateTalkingAnimation(bool isTalking) {
     ref
         .read(animationStateControllerProvider.notifier)
@@ -27,29 +44,30 @@ class _TextToSpeechState extends ConsumerState<TextToSpeechCloud> {
   }
 
   void _speakCloudTTS(String text) async {
-    final String currentLang =
-        ref.read(animationStateControllerProvider).language;
+    if (text.trim().isEmpty) return;
 
-    final audioBytes =
-        await ref.read(synthesizeTextFutureProvider(text, currentLang).future);
-    player.setAudioSource(audioBytes);
-    updateTalkingAnimation(true);
-    player.play();
+    try {
+      final String currentLang =
+          ref.read(animationStateControllerProvider).language;
+
+      final audioBytes = await ref
+          .read(synthesizeTextFutureProvider(text, currentLang).future);
+      await player.setAudioSource(audioBytes);
+      updateTalkingAnimation(true);
+      player.play();
+    } catch (e) {
+      print('Error in TTS: $e');
+      updateTalkingAnimation(false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     print('Built text to speech');
     ref.listen(openAIResponseControllerProvider, (previous, next) {
-      if (previous != next) {
-        _speakCloudTTS((next as String?) ?? '');
-        print('STATE: $next');
-      }
-    });
-
-    player.playerStateStream.listen((event) {
-      if (event.processingState == ProcessingState.completed) {
-        updateTalkingAnimation(false);
+      if (previous != next && next != null && next.toString().isNotEmpty) {
+        _speakCloudTTS(next.toString());
+        print('TTS STATE: $next');
       }
     });
 
