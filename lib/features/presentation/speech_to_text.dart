@@ -21,8 +21,6 @@ class _STTWidgetState extends ConsumerState<STTWidget>
   List<LocaleName> _localeNames = [];
   late AnimationController _idleAnimationController;
   late Animation<double> _idleAnimation;
-  late AnimationController _listeningAnimationController;
-  late Animation<double> _listeningAnimation;
   bool _isWaitingForResponse = false;
   @override
   void initState() {
@@ -42,25 +40,11 @@ class _STTWidgetState extends ConsumerState<STTWidget>
       curve: Curves.easeInOut,
     ));
     _idleAnimationController.repeat(reverse: true);
-
-    // Listening animation (pulsing when actively listening)
-    _listeningAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
-      vsync: this,
-    );
-    _listeningAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.2,
-    ).animate(CurvedAnimation(
-      parent: _listeningAnimationController,
-      curve: Curves.easeInOut,
-    ));
   }
 
   @override
   void dispose() {
     _idleAnimationController.dispose();
-    _listeningAnimationController.dispose();
     super.dispose();
   }
 
@@ -95,9 +79,6 @@ class _STTWidgetState extends ConsumerState<STTWidget>
     final localeId = _getCurrentLocale();
     await _speechToText.listen(onResult: _onSpeechResult, localeId: localeId);
 
-    // Start listening animation
-    _listeningAnimationController.repeat(reverse: true);
-
     setState(() {});
   }
 
@@ -122,10 +103,6 @@ class _STTWidgetState extends ConsumerState<STTWidget>
     await _speechToText.stop();
     ref.read(animationStateControllerProvider.notifier).updateHearing(false);
 
-    // Stop listening animation
-    _listeningAnimationController.stop();
-    _listeningAnimationController.reset();
-
     setState(() {});
   }
 
@@ -135,22 +112,15 @@ class _STTWidgetState extends ConsumerState<STTWidget>
     if (result.finalResult) {
       _lastWords = result.recognizedWords;
 
-      // Set waiting state and stop listening animation
+      // Set waiting state
       setState(() {
         _isWaitingForResponse = true;
       });
-      _listeningAnimationController.stop();
 
       ref
           .read(openAIResponseControllerProvider.notifier)
           .getResponse(_lastWords);
       _stopListening();
-      // setState(() {
-      //   _lastWords = result.recognizedWords;
-
-      //   print('Last words: $_lastWords');
-      //   print('Confidence: ${result.confidence}');
-      // });
     }
   }
 
@@ -187,56 +157,53 @@ class _STTWidgetState extends ConsumerState<STTWidget>
     final bool isDisabled = _isWaitingForResponse;
 
     return AnimatedBuilder(
-      animation: Listenable.merge([_idleAnimation, _listeningAnimation]),
+      animation: _idleAnimation,
       builder: (context, child) {
         return Transform.translate(
           offset: Offset(0, isIdle ? _idleAnimation.value : 0),
-          child: Transform.scale(
-            scale: _isListening ? _listeningAnimation.value : 1.0,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: InkWell(
-                onTap: isDisabled
-                    ? null
-                    : () {
-                        print("IS LISTENING: $_isListening");
-                        _isListening ? _stopListening() : _startListening();
-                      },
-                borderRadius: BorderRadius.circular(30),
-                child: Semantics(
-                  label: _getSemanticLabel(),
-                  button: true,
-                  enabled: !isDisabled,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        _getIconData(),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: InkWell(
+              onTap: isDisabled
+                  ? null
+                  : () {
+                      print("IS LISTENING: $_isListening");
+                      _isListening ? _stopListening() : _startListening();
+                    },
+              borderRadius: BorderRadius.circular(30),
+              child: Semantics(
+                label: _getSemanticLabel(),
+                button: true,
+                enabled: !isDisabled,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _getIconData(),
+                      color: _getIconColor(),
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      _getDisplayText(),
+                      style: TextStyle(
                         color: _getIconColor(),
-                        size: 24,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(width: 12),
-                      Text(
-                        _getDisplayText(),
-                        style: TextStyle(
-                          color: _getIconColor(),
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
