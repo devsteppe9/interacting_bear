@@ -82,7 +82,7 @@ jobs:
           bucket: ${{ env.S3_BUCKET }}
           bucket-region: ${{ env.S3_BUCKET_REGION }}
           dist-id: ${{ env.CLOUDFRONT_DISTRIBUTION_ID }}
-          invalidation: '/, /index.html, /flutter.js, /main.dart.js, /flutter_service_worker.js, /manifest.json'
+          invalidation: '/*'
           delete-removed: true
           private: true
           files-to-include: '{.*/**,**}'
