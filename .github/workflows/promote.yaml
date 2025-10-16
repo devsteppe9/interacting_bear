@@ -62,6 +62,18 @@ jobs:
           # Extract the zip file
           mkdir -p build
           unzip build-artifacts-${{ steps.version.outputs.version }}.zip -d build
+          
+          # Add cache-busting headers for critical files
+          echo "Adding cache-busting headers..."
+          
+          # Add version query parameter to main files to force browser refresh
+          if [ -f "build/index.html" ]; then
+            # Add version as query parameter to critical resources
+            sed -i "s/flutter\.js/flutter.js?v=${{ steps.version.outputs.version }}/g" build/index.html
+            sed -i "s/manifest\.json/manifest.json?v=${{ steps.version.outputs.version }}/g" build/index.html
+            
+            echo "Updated index.html with cache-busting headers"
+          fi
 
       - name: Deploy to S3 and CloudFront
         uses: reggionick/s3-deploy@v4
@@ -70,7 +82,7 @@ jobs:
           bucket: ${{ env.S3_BUCKET }}
           bucket-region: ${{ env.S3_BUCKET_REGION }}
           dist-id: ${{ env.CLOUDFRONT_DISTRIBUTION_ID }}
-          invalidation: /
+          invalidation: '/, /index.html, /flutter.js, /main.dart.js, /flutter_service_worker.js, /manifest.json'
           delete-removed: true
           private: true
           files-to-include: '{.*/**,**}'
