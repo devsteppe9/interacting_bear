@@ -47,9 +47,7 @@ To run the project, follow these steps:
 5. Generate Riverpod autoclasses.
     ```bash
     dart run build_runner build
-    
-    # or watch
-    dart run build_runner watch
+    # dart run build_runner watch
     ```
 6. Run the app on web.
     ```bash

@@ -4,15 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interacting_tom/features/providers/animation_state_controller.dart';
 import 'package:rive/rive.dart';
 
-class AnimationScreen extends ConsumerStatefulWidget {
-  const AnimationScreen({super.key});
+class BearAnimationScreen extends ConsumerStatefulWidget {
+  const BearAnimationScreen({super.key});
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
-      _AnimationScreenState();
+      _BearAnimationScreenState();
 }
 
-class _AnimationScreenState extends ConsumerState<AnimationScreen> {
+class _BearAnimationScreenState extends ConsumerState<BearAnimationScreen> {
   Artboard? riveArtboard;
   SMIBool? isHearing;
   SMIBool? talk;
@@ -66,7 +66,6 @@ class _AnimationScreenState extends ConsumerState<AnimationScreen> {
             : Rive(
                 artboard: riveArtboard!,
                 alignment: Alignment.bottomCenter,
-                // fit: BoxFit.cover,
               ));
   }
 }

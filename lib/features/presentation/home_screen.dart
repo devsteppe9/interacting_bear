@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:interacting_tom/features/presentation/animation_screen.dart';
+import 'package:interacting_tom/features/presentation/bear_animation_widget.dart';
 import 'package:interacting_tom/features/presentation/speech_to_text.dart';
 import 'package:interacting_tom/features/presentation/text_to_speech_cloud.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -40,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Stack(
         children: [
           TextToSpeechCloud(
-            child: AnimationScreen(),
+            child: BearAnimationScreen(),
           ),
           // Version display in bottom-left corner
           Positioned(
