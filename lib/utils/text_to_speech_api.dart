@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:convert' show base64, json, utf8;
+import 'dart:convert' show base64, json;
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
-import 'package:interacting_tom/env/env.dart';
+import 'package:interacting_bear/env/env.dart';
 
 class TextToSpeechAPI {
   static final TextToSpeechAPI _singleton = TextToSpeechAPI._internal();
@@ -66,11 +66,11 @@ class TextToSpeechAPI {
         },
         body: json.encode(jsonMap),
       );
-      
+
       if (response.statusCode != 200) {
         throw Exception('Bad Response: ${response.statusCode}');
       }
-      
+
       return json.decode(response.body);
     } on Exception catch (e) {
       print("$e");
@@ -87,11 +87,11 @@ class TextToSpeechAPI {
           'Content-Type': 'application/json',
         },
       );
-      
+
       if (response.statusCode != 200) {
         throw Exception('Bad Response: ${response.statusCode}');
       }
-      
+
       return json.decode(response.body);
     } on Exception catch (e) {
       print("$e");

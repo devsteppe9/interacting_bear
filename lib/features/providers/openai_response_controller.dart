@@ -1,4 +1,4 @@
-import 'package:interacting_tom/features/data/openai_repository.dart';
+import 'package:interacting_bear/features/data/openai_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'openai_response_controller.g.dart';

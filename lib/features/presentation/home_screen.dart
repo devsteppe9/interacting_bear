@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:interacting_tom/features/presentation/animation_screen.dart';
-import 'package:interacting_tom/features/presentation/speech_to_text.dart';
-import 'package:interacting_tom/features/presentation/text_to_speech_cloud.dart';
+import 'package:interacting_bear/features/presentation/bear_animation_widget.dart';
+import 'package:interacting_bear/features/presentation/voice_input_widget.dart';
+import 'package:interacting_bear/features/presentation/voice_output_cloud.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -39,8 +39,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          TextToSpeechCloud(
-            child: AnimationScreen(),
+          VoiceOutputCloud(
+            child: BearAnimationWidget(),
           ),
           // Version display in bottom-left corner
           Positioned(
@@ -69,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Center(child: STTWidget()),
+          Center(child: VoiceInputWidget()),
         ],
       ),
     );

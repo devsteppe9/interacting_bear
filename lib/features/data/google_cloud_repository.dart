@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:interacting_tom/utils/text_to_speech_api.dart';
+import 'package:interacting_bear/utils/text_to_speech_api.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
