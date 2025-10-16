@@ -192,9 +192,9 @@ class _STTWidgetState extends ConsumerState<STTWidget>
       _isWaitingForResponse = true;
     });
 
-    // Start timeout timer (10 seconds)
+    // Start timeout timer (30 seconds)
     _responseTimeout?.cancel();
-    _responseTimeout = Timer(const Duration(seconds: 10), () {
+    _responseTimeout = Timer(const Duration(seconds: 30), () {
       print('OpenAI response timeout - stopping wait');
       _stopWaitingForResponse();
     });
