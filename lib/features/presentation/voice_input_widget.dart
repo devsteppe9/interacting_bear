@@ -9,14 +9,14 @@ import 'package:speech_to_text/speech_to_text.dart';
 import 'package:collection/collection.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-class STTWidget extends ConsumerStatefulWidget {
-  const STTWidget({super.key});
+class VoiceInputWidget extends ConsumerStatefulWidget {
+  const VoiceInputWidget({super.key});
 
   @override
-  ConsumerState<STTWidget> createState() => _STTWidgetState();
+  ConsumerState<VoiceInputWidget> createState() => _VoiceInputWidgetState();
 }
 
-class _STTWidgetState extends ConsumerState<STTWidget>
+class _VoiceInputWidgetState extends ConsumerState<VoiceInputWidget>
     with TickerProviderStateMixin {
   final SpeechToText _speechToText = SpeechToText();
   String _lastWords = '';
