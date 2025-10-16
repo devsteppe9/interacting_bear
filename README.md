@@ -1,6 +1,13 @@
 # Talking Bear Flutter App
 An interactive Flutter app for kids featuring a cute polar bear character inspired by [Talking Tom](https://talkingtomandfriends.com/) and [Duolingo's Lily](https://blog.duolingo.com/ai-and-video-call/). The app creates an engaging experience where children can listen, interact, and discover exciting responses through voice conversations with their animated polar bear friend.
 
+## Demo
+- [Rive animation](https://rive.app/community/5628-11215-wave-hear-and-talk) used in this project.
+- Live demo: [interactingbear.jackjapar.com](https://interactingbear.jackjapar.com/)
+- App demo usage Video:
+
+https://github.com/Jaha96/interacting_bear/assets/18748558/47503d50-ed7e-4050-99f8-1fc9bee3d3e0
+
 ## Technologies
 
 - [Rive](https://rive.app/) for smooth and resource-efficient animations including hearing, waving, and talking
@@ -8,12 +15,6 @@ An interactive Flutter app for kids featuring a cute polar bear character inspir
 - [Google Cloud Text-to-Speech AI](https://cloud.google.com/text-to-speech) for real-time text-to-speech and device's built-in speech-to-text functionalities
 - [Chat GPT API](https://platform.openai.com/docs/api-reference/chat) for generating interesting and random responses
 
-## Demo
-- [Rive animation](https://rive.app/community/5628-11215-wave-hear-and-talk) used in this project.
-- Live demo: [interactingbear.jackjapar.com](https://interactingbear.jackjapar.com/)
-- App demo usage Video:
-
-https://github.com/Jaha96/interacting_bear/assets/18748558/47503d50-ed7e-4050-99f8-1fc9bee3d3e0
 
 ## Requirements
 - Tested with Flutter 3.35.6
@@ -67,13 +68,7 @@ I deployed this app on AWS S3 bucket and used CloudFront for CDN. And you can fi
 
 Contributions to this project are welcome! Feel free to create pull requests or open issues for bug fixes, feature requests, or any other improvements.
 
-## Star History
-
 [![Star History Chart](https://api.star-history.com/svg?repos=devsteppe9/interacting_bear&type=Date)](https://www.star-history.com/#devsteppe9/interacting_bear&Date)
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
 
 ---
 
