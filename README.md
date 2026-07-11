@@ -68,7 +68,9 @@ I deployed this app on AWS S3 bucket and used CloudFront for CDN. And you can fi
 
 Contributions to this project are welcome! Feel free to create pull requests or open issues for bug fixes, feature requests, or any other improvements.
 
-[![Star History Chart](https://api.star-history.com/svg?repos=devsteppe9/interacting_bear&type=Date)](https://www.star-history.com/#devsteppe9/interacting_bear&Date)
+## Star History
+
+[![Star History Chart](https://api.star-history.com/chart?repos=devsteppe9/interacting_bear&type=date&legend=top-left&sealed_token=PHKG_aFD-I9LT9mbz7lrBmNglma_Ou6MNYlqz1EakV7deJ692XvIlSw44oymRCOFjTgf-j7QkfHqq4y7iiMIEWL9bZILwdc9hELSJmVoIn7E8t06T8jrcAL9au75E0t6Oy-jpC14Dzo3Pi2Q4pe1qhnGCcllGGr7PUh2LdXCq2LEln1X3O5hLL-g5UF9)](https://www.star-history.com/?type=date&repos=devsteppe9%2Finteracting_bear)
 
 ---
 
